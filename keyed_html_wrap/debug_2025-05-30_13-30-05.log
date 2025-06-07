@@ -1,0 +1,16 @@
+🔄 Reloaded config from /Users/claytongoddard/Library/Application Support/Anki2/addons21/keyed_html_wrap/config.json
+🔁 Editor hook installed
+📎 Browser editor hook installed
+🧵 Initializing editor: <aqt.editor.Editor object at 0x16632c0a0>
+🗂 Shortcut definitions: {'Cmd+Ctrl+Shift+N': '<span class="antagonist">{}</span>', 'Cmd+Ctrl+Shift+L': '<span style="font-weight:350">{}</span>'}
+🔗 Registered shortcut Cmd+Ctrl+Shift+N -> <span class="antagonist">{}</span>
+🔗 Registered shortcut Cmd+Ctrl+Shift+L -> <span style="font-weight:350">{}</span>
+🧪 Registered config reload shortcut: Cmd+Alt+R
+🧷 Loading editor for browser note: <aqt.editor.Editor object at 0x16632c0a0>
+🛑 Editor already initialized: <aqt.editor.Editor object at 0x16632c0a0>
+🧷 Loading editor for browser note: <aqt.editor.Editor object at 0x16632c0a0>
+🛑 Editor already initialized: <aqt.editor.Editor object at 0x16632c0a0>
+🧷 Loading editor for browser note: <aqt.editor.Editor object at 0x16632c0a0>
+🛑 Editor already initialized: <aqt.editor.Editor object at 0x16632c0a0>
+🧷 Loading editor for browser note: <aqt.editor.Editor object at 0x16632c0a0>
+🛑 Editor already initialized: <aqt.editor.Editor object at 0x16632c0a0>

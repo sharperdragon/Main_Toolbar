@@ -1,0 +1,18 @@
+{
+    "toolbar_title": "Custom Tools",
+    "enable_toolbar_settings": true,
+    "default_icon": "icons/bent_menu-burger.png",
+    "default_submenu": "",
+    "show_disabled_items": false,
+    "Other_addon_names": [
+        "Add_img_class",
+        "Change_note-types",
+        "High-Yield-Tags",
+        "QID_Search",
+        "merge_images",
+        "Main_Toolbar", 
+        "Filter_deck_Gen", 
+        "Deck_from_Tag",
+        "confetti"
+    ]
+}
