@@ -14,7 +14,14 @@ from aqt import mw
 from aqt.utils import showText
 from aqt.qt import QIcon
 
-from .utils import CONFIG, register_addon_tool, load_json_file, build_config_tools, resolve_icon_path
+from .utils import CONFIG, register_addon_tool, build_config_tools, resolve_icon_path
+# Ensure tools.json is read as UTF-8
+import json
+
+# Local definition to ensure UTF-8 reading for JSON files
+def load_json_file(path):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 from .assets.config_ui import ConfigDialog
 from .assets.config_manager import ConfigManager
 

@@ -114,9 +114,10 @@ def build_config_tools(config, make_open_fn):
     """
     tools = []
     for addon in config.get("Other_addon_names", []):
+        emoji = config.get("addon_emojis", {}).get(addon)
         display = addon.replace("_", " ").replace("-", " ").title()
         tools.append(dict(
-            name=f"{display} Config",
+            name=f"{display} {emoji}" if emoji else display,
             callback=make_open_fn(addon),
             submenu_name="Add-ons Configurations",
             icon=config.get("default_icon"),

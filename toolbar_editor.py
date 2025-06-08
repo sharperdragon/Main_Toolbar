@@ -14,7 +14,8 @@ import json, os, traceback
 import importlib
 
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
-CONFIG = json.load(open(os.path.join(ASSETS, "config.json")))
+with open(os.path.join(ASSETS, "config.json"), encoding="utf-8") as f:
+    CONFIG = json.load(f)
 
 from aqt.utils import qconnect
 from aqt.qt import QFile, QTextStream
