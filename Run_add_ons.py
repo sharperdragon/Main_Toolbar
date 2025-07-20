@@ -14,12 +14,9 @@ from aqt import mw
 from aqt.utils import showText
 from aqt.qt import QIcon
 
-from . import utils
 from .utils import CONFIG, register_addon_tool, build_config_tools, resolve_icon_path
 # Ensure tools.json is read as UTF-8
 import json
-
-TOOL_REGISTRY = []
 
 # Local definition to ensure UTF-8 reading for JSON files
 def load_json_file(path):
@@ -44,9 +41,6 @@ def load_other_configs():
     # This flag controls whether the 'Other Add-ons Configurations' submenu is shown
     if not CONFIG.get("enable_toolbar_settings", False):
         return
-
-    from Main_Toolbar.modules.QID_to_Search import qid_tool_entry
-    TOOL_REGISTRY.append(qid_tool_entry())
 
 
     # Generates a function to open the config dialog for a given add-on name.
@@ -117,7 +111,10 @@ def load_tools_from_config():
     submenu_lookup.clear()
 
     # Create the main custom tools menu and append it to Anki's Tools menu.
-    submenu_lookup[""] = QMenu()  # placeholder for submenu tree reconstruction later
+    custom_menu = QMenu(CONFIG.get("toolbar_title", "Custom Tools"), mw)
+    mw.form.menuTools.addSeparator()
+    mw.form.menuTools.addMenu(custom_menu)
+    submenu_lookup[""] = custom_menu
 
     # Utility to fetch existing submenu or create a new one if it doesn't exist.
     def get_or_create_submenu(name):
@@ -189,13 +186,6 @@ def load_tools_from_config():
                         print(f"⚠️ Icon failed to load or is empty: {icon_path}")
             action.setEnabled(enabled)
             action.triggered.connect(callback)
-            TOOL_REGISTRY.append({
-                "name": name,
-                "icon": icon,
-                "enabled": enabled,
-                "callback": callback,
-                "submenu": submenu_name
-            })
         except Exception:
             err = traceback.format_exc()
             showText(

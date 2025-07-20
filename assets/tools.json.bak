@@ -32,14 +32,6 @@
     "enabled": true
   },
   {
-    "name": "Search QID",
-    "module": "Main_Toolbar.modules.QID_to_Search",
-    "function": "search_uworld_qids",
-    "submenu": "Custom",
-    "icon": ":assets/icons/gear.svg",
-    "enabled": true
-  },
-  {
     "name": "Toolbar Settings",
     "module": "Main_Toolbar.toolbar_editor",
     "function": "edit_toolbar_json",
