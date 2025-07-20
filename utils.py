@@ -54,16 +54,13 @@ def resolve_icon_path(path):
 
 # Rebuild the "Custom Tools" top menu in Anki, supporting nested submenus via '::'
 def _refresh_menu():
-    """Rebuild the Custom Tools menu with support for nested submenus using '::'."""
-
-    # Remove any previously added "Custom Tools" menu to avoid duplicates
-    # Remove existing custom menu
-    for action in mw.form.menuTools.actions():
-        if action.menu() and action.menu().title() == CONFIG.get("toolbar_title", "Custom Tools"):
-            mw.form.menuTools.removeAction(action)
-
-    # Create a new top-level QMenu with the configured toolbar title
-    top_menu = QMenu(CONFIG.get("toolbar_title", "Custom Tools"), mw)
+    """Rebuilds all top-level menus based on registered addon tools and submenu structure."""
+    # Remove any previously added menus matching registered top-level names
+    existing_titles = {submenu.split("::")[0] if submenu else CONFIG.get("toolbar_title", "Custom Tools") 
+                       for submenu in addon_actions}
+    for action in mw.form.menubar.actions():
+        if action.menu() and action.menu().title() in existing_titles:
+            mw.form.menubar.removeAction(action)
 
     # Recursively build nested actions based on '::' submenu structure
     def add_nested_action(menu: QMenu, path: list[str], name, callback, icon=None, enabled=True):
@@ -76,20 +73,25 @@ def _refresh_menu():
             menu.addAction(action)
         else:
             head, *tail = path
-            # Find or create submenu
             sub = next((a.menu() for a in menu.actions() if a.menu() and a.menu().title() == head), None)
             if not sub:
                 sub = QMenu(head, mw)
                 menu.addMenu(sub)
             add_nested_action(sub, tail, name, callback, icon, enabled)
 
-    # Iterate over all registered tools and insert them into the nested menu
+    # Build top-level menus by grouping tools
+    menu_groups = {}
     for submenu_path, actions in addon_actions.items():
-        path = submenu_path.split("::") if submenu_path else []
-        for (name, callback, icon, enabled) in actions:
-            add_nested_action(top_menu, path, name, callback, icon, enabled)
+        top = submenu_path.split("::")[0] if submenu_path else CONFIG.get("toolbar_title", "Custom Tools")
+        menu_groups.setdefault(top, []).append((submenu_path, actions))
 
-    mw.form.menuTools.addMenu(top_menu)
+    for top_title, grouped in menu_groups.items():
+        top_menu = QMenu(top_title, mw)
+        for submenu_path, actions in grouped:
+            path = submenu_path.split("::")[1:] if submenu_path else []
+            for (name, callback, icon, enabled) in actions:
+                add_nested_action(top_menu, path, name, callback, icon, enabled)
+        mw.form.menubar.addMenu(top_menu)
 
 
 # Register a tool into the custom toolbar and refresh the menu

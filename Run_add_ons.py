@@ -59,7 +59,7 @@ def load_other_configs():
 
         # Locate the custom toolbar menu already present in the Anki Tools menu.
         custom_tools_menu = None
-        for action in mw.form.menuTools.actions():
+        for action in mw.form.menubar.actions():
             if action.menu() and action.menu().title() == CONFIG.get("toolbar_title", "Custom Tools"):
                 custom_tools_menu = action.menu()
                 break
@@ -67,29 +67,15 @@ def load_other_configs():
         if not custom_tools_menu:
             return
 
-        # Setup submenu for "Other Add-ons Configurations" if not already created.
-        submenu_title = "Add-ons Configurations"
-        submenu = submenu_lookup.get(submenu_title)
-        if not submenu:
-            submenu = QMenu(submenu_title, mw)
-            submenu_lookup[""].insertMenu(
-                submenu_lookup[""].actions()[0] if submenu_lookup[""].actions() else None,
-                submenu
-            )
-            # Insert a separator immediately after the last action in "Add-ons Configurations"
-            submenu_lookup[""].insertSeparator(submenu.menuAction())
-            submenu_lookup[submenu_title] = submenu
-
-        # Add each external config tool to the submenu with proper icon and callback registration.
+        # Register each tool using the unified system so it appears under the correct menu
         for tool in config_tools:
-            action = submenu.addAction(tool["name"])
-            if tool["icon"]:
-                icon_path = resolve_icon_path(tool["icon"])
-                icon_obj = QIcon(icon_path)
-                print(f"📦 Icon: {tool['name']} | Path: {icon_path} | Sizes: {icon_obj.availableSizes()}")
-                action.setIcon(icon_obj)
-            action.setEnabled(tool["enabled"])
-            action.triggered.connect(tool["callback"])
+            register_addon_tool(
+                name=tool["name"],
+                callback=tool["callback"],
+                submenu_name="Add-ons Configurations",
+                icon=tool["icon"],
+                enabled=tool["enabled"]
+            )
 
     except Exception:
         err = traceback.format_exc()
@@ -110,10 +96,9 @@ def load_tools_from_config():
     global submenu_lookup
     submenu_lookup.clear()
 
-    # Create the main custom tools menu and append it to Anki's Tools menu.
+    # Create the main custom tools menu and append it to Anki's menubar.
     custom_menu = QMenu(CONFIG.get("toolbar_title", "Custom Tools"), mw)
-    mw.form.menuTools.addSeparator()
-    mw.form.menuTools.addMenu(custom_menu)
+    mw.form.menubar.addMenu(custom_menu)
     submenu_lookup[""] = custom_menu
 
     # Utility to fetch existing submenu or create a new one if it doesn't exist.
