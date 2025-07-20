@@ -12,6 +12,7 @@ from .utils import _refresh_menu
 from aqt.utils import showInfo, showText
 import json, os, traceback
 import importlib
+from .Run_add_ons import TOOL_REGISTRY
 
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
 with open(os.path.join(ASSETS, "config.json"), encoding="utf-8") as f:
@@ -267,6 +268,30 @@ class ToolbarManager(QDialog):
                 json.dump(tools, f, indent=2)
             # Refresh the Anki menu to reflect changes immediately
             _refresh_menu()
+
+            # Update tool registry to reflect new saved tools
+            TOOL_REGISTRY.clear()
+            for entry in tools:
+                if entry.get("type") == "separator":
+                    continue
+                module_name = entry.get("module", "").strip()
+                func_name = entry.get("function", "").strip()
+                if not module_name or not func_name:
+                    continue
+                try:
+                    mod = importlib.import_module(module_name)
+                    callback = getattr(mod, func_name, None)
+                    if callback:
+                        TOOL_REGISTRY.append({
+                            "name": entry.get("name", func_name),
+                            "icon": entry.get("icon", ""),
+                            "enabled": entry.get("enabled", True),
+                            "callback": callback,
+                            "submenu": entry.get("submenu", "")
+                        })
+                except Exception:
+                    continue
+
             # Optionally show a success notification if configured in any tool entry
             for entry in tools:
                 if str(entry.get("sucess_notification", "true")).lower() in ("true", "1"):
