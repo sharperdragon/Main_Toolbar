@@ -4,7 +4,7 @@
     "module": "Main_Toolbar.modules.IMG_dupes",
     "function": "run_img_dupes_script",
     "submenu": "Media",
-    "icon": "/assets/icons/gear.svg",
+    "icon": "icons/bent_menu-burger.png",
     "enabled": true
   },
   {
@@ -12,7 +12,7 @@
     "module": "Main_Toolbar.modules.Delete_unused_notes",
     "function": "delete_empty_note_types",
     "submenu": "Custom",
-    "icon": ":assets/icons/gear.svg",
+    "icon": "icons/image.png",
     "enabled": true
   },
   {
@@ -20,7 +20,7 @@
     "module": "Main_Toolbar.modules.get_unused_media",
     "function": "export_unused_media_to_txt",
     "submenu": "Media",
-    "icon": ":assets/icons/gallery.svg",
+    "icon": "icons/gallery.png",
     "enabled": true
   },
   {
@@ -28,7 +28,15 @@
     "module": "Main_Toolbar.modules.get_missing_media",
     "function": "write_missing_file",
     "submenu": "Media",
-    "icon": ":assets/icons/gear.svg",
+    "icon": "icons/picture.png",
+    "enabled": true
+  },
+  {
+    "name": "QID Search",
+    "module": "Main_Toolbar.modules.FindQIDs",
+    "function": "main",
+    "submenu": "",
+    "icon": "icons/bent_menu-burger.png",
     "enabled": true
   },
   {
@@ -36,7 +44,7 @@
     "module": "Main_Toolbar.toolbar_editor",
     "function": "edit_toolbar_json",
     "submenu": "",
-    "icon": ":assets/icons/gear.svg",
+    "icon": "icons/bent_menu-burger.png",
     "enabled": true
   }
 ]

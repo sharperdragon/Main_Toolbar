@@ -94,8 +94,8 @@ class ConfigDialog(QDialog):
             guide_extra = extra_width * (2.5 / 3.5)
             config_extra = extra_width * (1 / 3.5)
             splitter.setSizes([
-                min(400, initial_config_width + config_extra),
-                max(200, initial_guide_width + guide_extra),
+                int(min(400, initial_config_width + config_extra)),
+                int(max(200, initial_guide_width + guide_extra)),
             ])
         self.resizeEvent = lambda event: adjust_splitter()
 

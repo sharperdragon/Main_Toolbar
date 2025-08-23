@@ -8,14 +8,6 @@
     "enabled": true
   },
   {
-    "name": "Delete stray note types",
-    "module": "Main_Toolbar.modules.Delete_unused_notes",
-    "function": "delete_empty_note_types",
-    "submenu": "Custom",
-    "icon": "icons/image.png",
-    "enabled": true
-  },
-  {
     "name": "Get Unused",
     "module": "Main_Toolbar.modules.get_unused_media",
     "function": "export_unused_media_to_txt",
