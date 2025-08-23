@@ -15,7 +15,7 @@ from aqt.utils import showText
 from aqt.qt import QIcon
 
 from .utils import CONFIG, register_addon_tool, build_config_tools, resolve_icon_path
-# Ensure tools.json is read as UTF-8
+# Ensure actions.json is read as UTF-8
 import json
 
 # Local definition to ensure UTF-8 reading for JSON files
@@ -82,17 +82,17 @@ def load_other_configs():
             title=CONFIG.get("toolbar_title", "Custom Tools") + " Error"
         )
 
-# Main function to dynamically load functional tools defined in tools.json and add to the toolbar.
-# Dynamically loads and registers tools from tools.json file.
+# Main function to dynamically load functional tools defined in actions.json and add to the toolbar.
+# Dynamically loads and registers tools from actions.json file.
 def load_tools_from_config():
     """
-    Load and register tools defined in the external tools.json configuration file.
+    Load and register tools defined in the external actions.json configuration file.
     This function differentiates between separators, labels, and functional tools,
     dynamically imports tool callback functions, and registers them into the toolbar.
     """
 
-    # Define and check path to the tools.json configuration file.
-    tools_path = os.path.join(os.path.dirname(__file__), "assets", "tools.json")
+    # Define and check path to the actions.json configuration file.
+    tools_path = os.path.join(os.path.dirname(__file__), "assets", "actions.json")
    
     # Skip loading if the config file is missing
     if not os.path.exists(tools_path):

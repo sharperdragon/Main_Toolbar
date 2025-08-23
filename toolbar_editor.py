@@ -1,7 +1,7 @@
 # This script provides a GUI for editing the toolbar tools in Anki via a table interface.
-# It allows users to add, remove, reorder, and save tools defined in tools.json using drag-and-drop.
+# It allows users to add, remove, reorder, and save tools defined in actions.json using drag-and-drop.
 # GUI editor for managing custom toolbar tools in Anki add-ons.
-# Provides a table interface to edit tools.json with support for drag-and-drop reordering.
+# Provides a table interface to edit actions.json with support for drag-and-drop reordering.
 # pyright: reportMissingImports=false
 # mypy: disable_error_code=import
 from aqt.qt import (
@@ -12,6 +12,7 @@ from .utils import _refresh_menu
 from aqt.utils import showInfo, showText
 import json, os, traceback
 import importlib
+from typing import Dict, Any
 
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
 with open(os.path.join(ASSETS, "config.json"), encoding="utf-8") as f:
@@ -40,7 +41,7 @@ class ToolbarManager(QDialog):
         super().__init__(parent)
         self.setObjectName("toolbarEditorDialog")
         self.setWindowTitle(CONFIG["toolbar_title"])
-        self.path = os.path.join(ASSETS, "tools.json")
+        self.path = os.path.join(ASSETS, "actions.json")
         self.resize(975, 300)
 
         self.tools = []
@@ -107,7 +108,7 @@ class ToolbarManager(QDialog):
         self.btn_add.setObjectName("btnAddTool")
         self.btn_delete = QPushButton("Delete") # Button to delete selected tool entries
         self.btn_delete.setObjectName("btnDeleteTool")
-        self.btn_save = QPushButton("Save")     # Button to save changes to tools.json
+        self.btn_save = QPushButton("Save")     # Button to save changes to actions.json
         self.btn_save.setObjectName("btnSaveTools")
         btns.addWidget(self.btn_add)
         btns.addWidget(self.btn_delete)
@@ -128,7 +129,7 @@ class ToolbarManager(QDialog):
         # Apply theme-based styling to the dialog
         apply_stylesheet(self)
 
-    # Load tools from tools.json and populate the table
+    # Load tools from actions.json and populate the table
     def load_tools(self):
         try:
             if os.path.exists(self.path):
@@ -198,7 +199,7 @@ class ToolbarManager(QDialog):
         for index in sorted(indexes, reverse=True):
             self.table.removeRow(index.row())
 
-    # Save current table entries to tools.json, making a backup and refreshing the menu
+    # Save current table entries to actions.json, making a backup and refreshing the menu
     def save_tools(self):
         try:
             # Convert each table row back into a dictionary matching the tool fields
@@ -257,12 +258,12 @@ class ToolbarManager(QDialog):
                     "enabled": True
                 })
 
-            # Before overwriting tools.json, create a backup of the existing file if it exists
+            # Before overwriting actions.json, create a backup of the existing file if it exists
             backup_path = self.path + ".bak"
             if os.path.exists(self.path):
                 os.rename(self.path, backup_path)
 
-            # Write the updated tools list to tools.json with pretty formatting
+            # Write the updated tools list to actions.json with pretty formatting
             with open(self.path, "w") as f:
                 json.dump(tools, f, indent=2)
             # Refresh the Anki menu to reflect changes immediately
@@ -286,6 +287,49 @@ class ToolbarManager(QDialog):
             "icon": "",
             "enabled": False
         })
+
+def _load_toolbar_config(config_path: str) -> Dict[str, Any]:
+    """
+    Load toolbar config JSON (emojis, nicknames, etc.).
+    """
+    import json, os
+    if not os.path.exists(config_path):
+        return {}
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f) or {}
+
+def _get_emoji_for(addon_name: str, cfg: Dict[str, Any]) -> str:
+    """
+    Return the emoji for an addon name, or '' if none is configured.
+    """
+    emojis = (cfg.get("addon_emojis") or {})
+    return emojis.get(addon_name, "") or ""
+
+def _get_nickname_for(addon_name: str, cfg: Dict[str, Any]) -> str:
+    """
+    Return the nickname for an addon name, or '' if none is configured.
+    """
+    nicknames = (cfg.get("addon_nicknames") or {})
+    return nicknames.get(addon_name, "") or ""
+
+def format_toolbar_label(addon_name: str, cfg: Dict[str, Any]) -> str:
+    """
+    Build the final display label for the toolbar/menu:
+      [emoji␠] + [nickname or addon_name]
+    Examples:
+      "🧬 merge images"  (if nickname missing)
+      "🧬 Merge Images"  (if nickname present and capitalized in config)
+    """
+    emoji = _get_emoji_for(addon_name, cfg)
+    nick  = _get_nickname_for(addon_name, cfg)
+
+    # Prefer nickname if present; otherwise use the original addon_name.
+    base_label = nick if nick else addon_name
+
+    # If we have an emoji, prefix it with a space after; otherwise no prefix.
+    return f" {base_label} {emoji}" if emoji else base_label
+
+
 
 # Launch the ToolbarManager dialog
 def open_toolbar_editor():

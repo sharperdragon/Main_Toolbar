@@ -52,6 +52,22 @@ def resolve_icon_path(path):
     return os.path.join(addon_dir, "icons", path)
 
 
+def format_config_label(addon: str, config: dict) -> str:
+    """
+    Build the display label for the Add-ons Configurations submenu using:
+      [emoji␠][nickname OR prettified addon name]
+    where nickname is sourced from config["addon_nicknames"].
+    """
+    emojis = (config.get("addon_emojis") or {})
+    nicknames = (config.get("addon_nicknames") or {})
+
+    emoji = emojis.get(addon, "") or ""
+    # Prefer nickname if provided; fall back to prettified addon key
+    display = nicknames.get(addon) or addon.replace("_", " ").replace("-", " ").title()
+
+    return f"{emoji} {display}" if emoji else display
+
+
 # Rebuild the "Custom Tools" top menu in Anki, supporting nested submenus via '::'
 def _refresh_menu():
     """Rebuilds all top-level menus based on registered addon tools and submenu structure."""
@@ -116,10 +132,9 @@ def build_config_tools(config, make_open_fn):
     """
     tools = []
     for addon in config.get("Other_addon_names", []):
-        emoji = config.get("addon_emojis", {}).get(addon)
-        display = addon.replace("_", " ").replace("-", " ").title()
+        label = format_config_label(addon, config)
         tools.append(dict(
-            name=f"{display} {emoji}" if emoji else display,
+            name=label,  # includes emoji + nickname fallback
             callback=make_open_fn(addon),
             submenu_name="Add-ons Configurations",
             icon=config.get("default_icon"),

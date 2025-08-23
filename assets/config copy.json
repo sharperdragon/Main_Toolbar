@@ -5,24 +5,25 @@
     "default_submenu": "",
     "show_disabled_items": false,
     "Other_addon_names": [
+        "Add_img_class",
         "Change_notes",
         "High-Yield-Tags",
         "QID_Search",
+        "merge_images",
         "Main_Toolbar",  
+        "Deck_from_Tag", 
         "easy_find",
         "Filtered_from_"
     ],
     "addon_emojis": {
+        "Add_img_class": "🖼️",
         "Change_notes": "📝",
         "High-Yield-Tags": "🏷️",
         "QID_Search": "🔍",
+        "merge_images": "🧬",
         "Main_Toolbar": "🛠️",
+        "Deck_from_Tag": "🗂️", 
         "easy_find": "🔍",
         "Filtered_from_":"➕"
-    },
-    "addon_nicknames": {
-        "Filtered_from_": "Filtered from tag/deck",
-        "Add_img_class": "Add IMG class",
-        "Change_notes": "CHANGE NOTES"
     }
 }
