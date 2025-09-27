@@ -1,0 +1,163 @@
+
+/* Modern, readable styling for the Toolbar Editor WebView */
+
+:root {
+  /* Light theme */
+  --bg: #f7f8fa;
+  --panel: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --border: #e5e7eb;
+  --row-hover: #f1f5f9;
+  --row-alt: #fafafa;
+  --header-bg: #f3f4f6;
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --panel: #111827;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #60a5fa;
+    --accent-contrast: #0b1220;
+    --border: #1f2937;
+    --row-hover: #172036;
+    --row-alt: #0e1627;
+    --header-bg: #121a2c;
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* Layout */
+body {
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  margin: 16px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Control bar */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+.controls .small { font-size: 12px; color: var(--muted); }
+
+/* Buttons (applies to any <button> in the view) */
+button {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.02s ease;
+}
+button:hover { background: var(--row-hover); }
+button:active { transform: translateY(1px); }
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+button.primary:hover { filter: brightness(1.05); }
+
+/* Table */
+.table-wrap { /* optional wrapper if needed later */ }
+
+table {
+  width: 100%;
+  border-collapse: separate; /* allows radius on first/last row */
+  border-spacing: 0;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden; /* clip sticky header shadow */
+}
+
+th, td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+th {
+  text-align: left;
+  position: sticky;
+  top: 0;
+  background: var(--header-bg);
+  z-index: 2;
+  font-weight: 600;
+}
+
+/* Add subtle divider shadow under sticky header */
+thead::after {
+  content: "";
+  position: sticky;
+  display: block;
+  top: 40px; /* approx header height */
+  height: 0;
+  box-shadow: 0 2px 0 var(--border);
+}
+
+/* Row visuals */
+tbody tr:nth-child(even) { background: var(--row-alt); }
+
+tbody tr:hover { background: var(--row-hover); }
+
+tr[draggable="true"] { cursor: grab; }
+tr[draggable="true"]:active { cursor: grabbing; }
+
+/* Last row shouldn't show bottom border through rounded corners */
+tbody tr:last-child td { border-bottom-color: transparent; }
+
+/* Per-cell controls */
+.row-actions { display: flex; gap: 8px; }
+
+/* Inputs inside cells */
+td input[type="text"],
+input[type="text"],
+input:not([type]) {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 9px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+input[type="text"]:focus,
+input:not([type]):focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+/* Checkbox alignment & size */
+input[type="checkbox"] {
+  width: 16px; height: 16px;
+  transform: translateY(1px);
+}
+
+/* Helper text */
+.small { font-size: 12px; color: var(--muted); }
+
+/* Compact spacing on small screens */
+@media (max-width: 720px) {
+  body { margin: 12px; }
+  th, td { padding: 8px 10px; }
+  button { padding: 6px 10px; }
+}
