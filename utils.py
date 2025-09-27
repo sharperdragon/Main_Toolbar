@@ -133,7 +133,7 @@ def build_config_tools(config, make_open_fn):
         tools.append(dict(
             name=label,  # includes emoji + nickname fallback
             callback=make_open_fn(addon),
-            submenu_name="Add-ons Configurations",
+            submenu_name="Addon Configs",
             icon=config.get("default_icon"),
             enabled=True
         ))

@@ -1,7 +1,4 @@
-# This script provides a GUI for editing the toolbar tools in Anki via a table interface.
-# It allows users to add, remove, reorder, and save tools defined in actions.json using drag-and-drop.
-# GUI editor for managing custom toolbar tools in Anki add-ons.
-# Provides a table interface to edit actions.json with support for drag-and-drop reordering.
+# * GUI editor to manage toolbar tools defined in assets/actions.json (add, delete, reorder, save)
 # pyright: reportMissingImports=false
 # mypy: disable_error_code=import
 from aqt.qt import (
@@ -14,6 +11,7 @@ import json, os, traceback
 import importlib
 from typing import Dict, Any
 
+# Paths and config: ASSETS points to ./assets; CONFIG loads assets/config.json
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
 with open(os.path.join(ASSETS, "config.json"), encoding="utf-8") as f:
     CONFIG = json.load(f)
@@ -21,7 +19,8 @@ with open(os.path.join(ASSETS, "config.json"), encoding="utf-8") as f:
 from aqt.utils import qconnect
 from aqt.qt import QFile, QTextStream
 
-# Apply external CSS styling based on Anki theme
+# Apply external stylesheet/QSS based on Anki theme.
+# Chooses dark or light file if present; otherwise uses default styling.
 def apply_stylesheet(widget):
     # Determine which stylesheet to use based on whether Anki is in night mode or not
     from aqt.theme import theme_manager
@@ -32,11 +31,14 @@ def apply_stylesheet(widget):
         with open(css_path, "r") as f:
             widget.setStyleSheet(f.read())
 
-# Define the fields used for each tool entry in the table
+# Table columns: name, module, function, submenu, icon, enabled (checkbox)
 TOOL_FIELDS = ["name", "module", "function", "submenu", "icon", "enabled"]
 
-# Main dialog for editing the toolbar tools table
 class ToolbarManager(QDialog):
+    """
+    * Modal dialog to view/edit toolbar tools stored in assets/actions.json.
+    ^ Loads existing tools, supports drag-drop reordering, writes JSON (with backup), refreshes menus.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("toolbarEditorDialog")
@@ -54,6 +56,7 @@ class ToolbarManager(QDialog):
         # Set the header labels to correspond to the tool fields
         self.table.setHorizontalHeaderLabels(TOOL_FIELDS)
 
+        # Enable row-wise selection and internal drag-drop to reorder rows (no external drops).
         # Enable dragging rows from the table
         self.table.setDragEnabled(True)
         # Allow the table widget to accept drops (needed for drag-and-drop reordering)
@@ -84,7 +87,10 @@ class ToolbarManager(QDialog):
             "enabled": 70,
         }
 
-        # Restore individual widths and set priorities per column
+        # Column sizing:
+        # - enabled: Fixed
+        # - module/function/submenu: Stretch with minimum width
+        # - others: Interactive with per-column minimums
         for i, field in enumerate(TOOL_FIELDS):
             width = field_widths.get(field, 100)
             self.table.setColumnWidth(i, width)
@@ -129,8 +135,9 @@ class ToolbarManager(QDialog):
         # Apply theme-based styling to the dialog
         apply_stylesheet(self)
 
-    # Load tools from actions.json and populate the table
     def load_tools(self):
+        # Load actions.json if present; otherwise start empty.
+        # Skip showing separators and the "Toolbar Settings" row in the editor.
         try:
             if os.path.exists(self.path):
                 with open(self.path, "r", encoding="utf-8") as f:
@@ -150,11 +157,12 @@ class ToolbarManager(QDialog):
                     continue  # Skip displaying separators and toolbar settings in the editor
                 self.add_row(tool)
         except Exception:
-            # Show traceback in a text dialog if loading fails
+            # Show traceback for easier debugging (non-fatal load failures).
             showText(traceback.format_exc(), title="Load Error")
 
-    # Add a new row to the table, either blank or populated from an existing tool entry
     def add_row(self, tool=None):
+        # Insert a row; fill missing fields with CONFIG defaults (submenu, icon, enabled=True).
+        # Divider rows render as read-only "↕ Divider" and are not editable.
         row = self.table.rowCount()
         self.table.insertRow(row)
         # Set a uniform height for all rows in the table for visual consistency.
@@ -179,7 +187,7 @@ class ToolbarManager(QDialog):
                 item.setForeground(Qt.gray)
                 self.table.setItem(row, col, item)
                 continue
-            # For the 'enabled' column, render a checkbox to reflect boolean state
+            # 'enabled' renders as a user-checkable checkbox (checked if "true"/"1").
             if key == "enabled":
                 checkbox = QTableWidgetItem()
                 # Make the checkbox user-checkable
@@ -191,16 +199,19 @@ class ToolbarManager(QDialog):
                 # For other fields, display the value as editable text
                 self.table.setItem(row, col, QTableWidgetItem(val))
 
-    # Delete selected row(s) from the table
     def delete_row(self):
-        # Get all selected rows (should be only one due to selection mode)
+        # * Single-row selection; delete in reverse order to avoid index shifts (future-proof if multi-select re-enabled).
         indexes = self.table.selectionModel().selectedRows()
-        # Remove rows in reverse order to avoid shifting indices during deletion
         for index in sorted(indexes, reverse=True):
             self.table.removeRow(index.row())
 
-    # Save current table entries to actions.json, making a backup and refreshing the menu
     def save_tools(self):
+        # ^ 1) Read table → list[dict]
+        # ^ 2) Normalize dividers (type="separator")
+        # ^ 3) Validate imports (module/function) and report any errors
+        # ^ 4) Ensure "Toolbar Settings" exists (append if missing)
+        # ^ 5) Backup existing actions.json → write new JSON
+        # ^ 6) Refresh menus and optionally notify
         try:
             # Convert each table row back into a dictionary matching the tool fields
             tools = []
@@ -214,7 +225,7 @@ class ToolbarManager(QDialog):
                     else:
                         # For other fields, strip whitespace from the text or default to empty string
                         entry[key] = item.text().strip() if item else ""
-                # Normalize divider name if present
+                # * Map visual "↕ Divider" to canonical separator name and type.
                 if entry.get("name", "").strip() == "↕ Divider":
                     entry["name"] = "———"
                     entry["type"] = "separator"
@@ -222,7 +233,7 @@ class ToolbarManager(QDialog):
                     entry["function"] = ""
                 tools.append(entry)
 
-            # Mark dividers with type "separator"
+            # * Mark any canonical divider names as type="separator"
             for entry in tools:
                 name = entry.get("name", "").strip()
                 if name in ("---", "—", "——", "———", "————", "—————"):
@@ -230,7 +241,7 @@ class ToolbarManager(QDialog):
                 else:
                     entry.pop("type", None)
 
-            # Validate imports for each tool that has module and function defined
+            # * Import check: import module and assert function exists; report per-entry errors via showInfo.
             for entry in tools:
                 if entry.get("type") == "separator":
                     continue
@@ -244,7 +255,7 @@ class ToolbarManager(QDialog):
                     except Exception as e:
                         showInfo(f"Import error in tool '{entry.get('name', '')}': {e}")
 
-            # Append Toolbar Settings if missing
+            # * Guarantee presence of a “Toolbar Settings” action so users can re-open the editor easily.
             toolbar_settings_exists = any(
                 entry.get("name", "").strip().lower() == "toolbar settings" for entry in tools
             )
@@ -258,7 +269,7 @@ class ToolbarManager(QDialog):
                     "enabled": True
                 })
 
-            # Before overwriting actions.json, create a backup of the existing file if it exists
+            # * Defensive write: rename current file to .bak before writing pretty-printed JSON.
             backup_path = self.path + ".bak"
             if os.path.exists(self.path):
                 os.rename(self.path, backup_path)
@@ -268,6 +279,8 @@ class ToolbarManager(QDialog):
                 json.dump(tools, f, indent=2)
             # Refresh the Anki menu to reflect changes immediately
             _refresh_menu()
+            # ! Key 'sucess_notification' appears misspelled in some configs; code treats "true"/"1" as enabled if present.
+            # ? Consider standardizing to 'success_notification' in config (code change not included here).
             # Optionally show a success notification if configured in any tool entry
             for entry in tools:
                 if str(entry.get("sucess_notification", "true")).lower() in ("true", "1"):
@@ -275,10 +288,11 @@ class ToolbarManager(QDialog):
                     showInfo(msg)
                     break
         except Exception:
-            # Show traceback in a text dialog if saving fails
+            # * On any failure, show full traceback to aid debugging.
             showText(traceback.format_exc(), title="Save Error")
 
     def add_divider(self):
+        # Insert a non-interactive divider entry; stored as a separator when saved.
         self.add_row({
             "name": "———",
             "module": "",
@@ -300,25 +314,22 @@ def _load_toolbar_config(config_path: str) -> Dict[str, Any]:
 
 def _get_emoji_for(addon_name: str, cfg: Dict[str, Any]) -> str:
     """
-    Return the emoji for an addon name, or '' if none is configured.
+    Return configured value or '' if none is set.
     """
     emojis = (cfg.get("addon_emojis") or {})
     return emojis.get(addon_name, "") or ""
 
 def _get_nickname_for(addon_name: str, cfg: Dict[str, Any]) -> str:
     """
-    Return the nickname for an addon name, or '' if none is configured.
+    Return configured value or '' if none is set.
     """
     nicknames = (cfg.get("addon_nicknames") or {})
     return nicknames.get(addon_name, "") or ""
 
 def format_toolbar_label(addon_name: str, cfg: Dict[str, Any]) -> str:
     """
-    Build the final display label for the toolbar/menu:
-      [emoji␠] + [nickname or addon_name]
-    Examples:
-      "🧬 merge images"  (if nickname missing)
-      "🧬 Merge Images"  (if nickname present and capitalized in config)
+    Build the display label for the toolbar/menu: [emoji␠] + [nickname or addon_name].
+    Prefers nickname if present; otherwise uses addon_name. Prefixes emoji if available.
     """
     emoji = _get_emoji_for(addon_name, cfg)
     nick  = _get_nickname_for(addon_name, cfg)
@@ -331,9 +342,8 @@ def format_toolbar_label(addon_name: str, cfg: Dict[str, Any]) -> str:
 
 
 
-# Launch the ToolbarManager dialog
+ # Launch as a modal dialog attached to the Anki main window.
 def open_toolbar_editor():
-    # Import Anki main window and create the toolbar editor dialog as a modal window
     from aqt import mw
     dlg = ToolbarManager(mw)
     dlg.exec_()
