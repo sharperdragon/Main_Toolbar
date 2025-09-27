@@ -1,4 +1,4 @@
-# Utility functions and shared state for managing custom toolbar tools in Anki add-ons.
+# * Utility helpers and shared state for managing custom toolbar tools in Anki add-ons.
 
 # pyright: reportMissingImports=false
 # mypy: disable_error_code=import
@@ -8,8 +8,7 @@ from aqt import mw
 from aqt.qt import QAction, QMenu, QIcon
 from aqt.utils import showText
 
-# Dictionary storing registered toolbar actions categorized by submenu path
-# Shared state for registered toolbar actions
+ # * Stores registered toolbar actions, grouped by submenu path (e.g., "Top::Sub::Leaf")
 addon_actions = {}
 
 # Load and return JSON data from a file path
@@ -18,19 +17,18 @@ def load_json_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-# Load configuration settings from the config.json file
-# Load configuration
+ # * Global configuration loaded from ./assets/config.json
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "assets", "config.json")
 CONFIG = load_json_file(CONFIG_PATH)
 
 def resolve_icon_path(path):
     """
     Resolve icon path based on relative logic:
-    - Absolute → return as-is
-    - Qt resource (starts with ":assets/") → map to real assets folder path
-    - Qt resource (starts with ":") → return as-is
-    - Starts with "assets/" or "icons/" → join with addon_dir
-    - Otherwise → assume it's in 'icons/'
+    - Absolute path → return as-is
+    - ":assets/..." (pseudo-Qt resource) → map to add-on's ./assets/ directory
+    - ":"-prefixed (true Qt resource) → return as-is
+    - "assets/..." or "icons/..." → join with add-on directory
+    - Otherwise → assume under ./icons/
     """
     if not path:
         return ""
@@ -68,10 +66,10 @@ def format_config_label(addon: str, config: dict) -> str:
     return f"{emoji} {display}" if emoji else display
 
 
-# Rebuild the "Custom Tools" top menu in Anki, supporting nested submenus via '::'
+ # * Rebuild "Custom Tools" menus based on current registrations (supports '::' nesting)
 def _refresh_menu():
     """Rebuilds all top-level menus based on registered addon tools and submenu structure."""
-    # Remove any previously added menus matching registered top-level names
+    # * Remove existing menus that match the current set of top-level registered names
     existing_titles = {submenu.split("::")[0] if submenu else CONFIG.get("toolbar_title", "Custom Tools") 
                        for submenu in addon_actions}
     for action in mw.form.menubar.actions():
@@ -121,8 +119,7 @@ def register_addon_tool(name, callback, submenu_name="", icon=None, enabled=True
 
 def build_config_tools(config, make_open_fn):
     """
-    Build a list of config tool definitions for add-ons based on config settings.
-
+    Build config tool definitions for the "Add-ons Configurations" submenu.
     Args:
         config (dict): Global config dictionary.
         make_open_fn (Callable): Function that returns a callback to open the config dialog.
