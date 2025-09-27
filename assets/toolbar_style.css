@@ -1,8 +1,5 @@
 
-/* Modern, readable styling for the Toolbar Editor WebView */
-
 :root {
-  /* Light theme */
   --bg: #f7f8fa;
   --panel: #ffffff;
   --text: #1f2937;
@@ -14,22 +11,6 @@
   --row-alt: #fafafa;
   --header-bg: #f3f4f6;
   --shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f172a;
-    --panel: #111827;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #60a5fa;
-    --accent-contrast: #0b1220;
-    --border: #1f2937;
-    --row-hover: #172036;
-    --row-alt: #0e1627;
-    --header-bg: #121a2c;
-    --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-  }
 }
 
 /* Layout */
@@ -72,8 +53,7 @@ button.primary {
 }
 button.primary:hover { filter: brightness(1.05); }
 
-/* Table */
-.table-wrap { /* optional wrapper if needed later */ }
+
 
 table {
   width: 100%;
@@ -134,8 +114,6 @@ input:not([type]) {
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 7px 9px;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
@@ -161,3 +139,27 @@ input[type="checkbox"] {
   th, td { padding: 8px 10px; }
   button { padding: 6px 10px; }
 }
+
+
+/* Row actions live inside the first cell (Name) */
+.row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Align the name input and its row actions */
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Let the name input take available space */
+.name-cell > input[type="text"],
+.name-cell > input:not([type]) {
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+
+/* Keep action buttons compact */
+.name-cell .row-actions button { padding: 4px 8px; }

@@ -1,5 +1,5 @@
 # Toolbar Editor (WebView rewrite) (WebView rewrite)
-# - Loads HTML UI from assets/tool_template.html
+# - Loads HTML UI from assets/toolbar.html with inlined CSS/JS
 # - Uses AnkiWebView + bridge for save/refresh
 # - Right-click → Inspect opens DevTools focused at cursor
 
@@ -11,7 +11,7 @@ import os, json, traceback
 from typing import Any, Dict
 
 from aqt.qt import (
-    QDialog, QVBoxLayout, Qt, QCursor, QMenu, QAction, QWebEngineView
+    QDialog, QVBoxLayout, Qt, QCursor, QMenu, QWebEngineView
 )
 from aqt.webview import AnkiWebView
 from aqt.utils import showInfo, showText
@@ -24,7 +24,9 @@ ADDON_DIR = os.path.dirname(__file__)
 ASSETS = os.path.join(ADDON_DIR, "assets")
 CONFIG_PATH = os.path.join(ASSETS, "config.json")
 ACTIONS_PATH = os.path.join(ASSETS, "actions.json")
-HTML_PATH = os.path.join(ASSETS, "tool_template.html")  # external file (lowercase name expected)
+HTML_PATH = os.path.join(ASSETS, "toolbar.html")
+CSS_PATH = os.path.join(ASSETS, "toolbar_style.css")
+JS_PATH  = os.path.join(ASSETS, "toolbar_script.js")
 DEVTOOLS_WINDOW_TITLE = "Toolbar DevTools"
 
 # Load config (labels, defaults)
@@ -38,15 +40,23 @@ except Exception:
 _toolbar_view: AnkiWebView | None = None
 _toolbar_devtools: QWebEngineView | None = None
 
+# Keep a reference to the open dialog when modeless
+_TOOLBAR_DIALOG = None
+
 
 class ToolbarEditorDialog(QDialog):
-    """Modal dialog hosting an AnkiWebView UI for toolbar editing."""
+    """Modeless dialog hosting an AnkiWebView UI for toolbar editing."""
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("toolbarEditorDialog")
         self.setWindowTitle(CONFIG.get("toolbar_title", "Toolbar Editor"))
         self.resize(1100, 700)
+
+        # Open modeless so Anki remains interactive; destroy widget on close
+        self.setModal(False)
+        self.setWindowModality(Qt.NonModal)
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         # Layout + WebView
         lay = QVBoxLayout(self)
@@ -60,10 +70,14 @@ class ToolbarEditorDialog(QDialog):
         # Bridge for save/refresh
         self.view.set_bridge_command(self._on_bridge, "toolbar_editor")
 
-        # Load external HTML from assets/tool_template.html
-        html = self._read_html()
-        # Inject <base href> so relative paths (icons, css, js) resolve to ./assets/
-        html = self._with_base_href(html)
+        # Load body-only HTML and inline CSS/JS like High-Yield Tags
+        tpl = self._read_html()
+        css = self._read_text(CSS_PATH)
+        js  = self._read_text(JS_PATH)
+        html = (
+            tpl.replace("{{ toolbar_style }}", f"<style>\n{css}\n</style>")
+               .replace("{{ toolbar_script }}", f"<script>\n{js}\n</script>")
+        )
         self.view.stdHtml(html, context=None)
 
         # Hydrate the UI with current actions.json
@@ -72,28 +86,19 @@ class ToolbarEditorDialog(QDialog):
     # --- I/O helpers ---
     def _read_html(self) -> str:
         try:
-            # Accept either tool_template.html or Tool_template.html
-            path = HTML_PATH
-            if not os.path.exists(path):
-                alt = os.path.join(ASSETS, "Tool_template.html")
-                path = alt if os.path.exists(alt) else HTML_PATH
-            with open(path, "r", encoding="utf-8") as f:
+            with open(HTML_PATH, "r", encoding="utf-8") as f:
                 return f.read()
         except Exception:
             showText(traceback.format_exc(), title="Load HTML Error")
-            return "<html><body><p>Failed to load tool_template.html</p></body></html>"
+            return "<div>Failed to load toolbar.html</div>"
 
-    def _with_base_href(self, html: str) -> str:
-        """Ensure the HTML has a <base href="file://.../assets/"> so relative paths resolve."""
+    def _read_text(self, path: str) -> str:
         try:
-            base = f"file://{ASSETS}/"
-            lower = html.lower()
-            if "<head" in lower and "<base" not in lower:
-                # Insert <base> immediately after <head>
-                return html.replace("<head>", f"<head>\n<base href=\"{base}\">", 1)
-            return html
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
         except Exception:
-            return html
+            showText(traceback.format_exc(), title=f"Load Error: {os.path.basename(path)}")
+            return ""
 
     def _load_actions(self) -> list[Dict[str, Any]]:
         try:
@@ -103,6 +108,26 @@ class ToolbarEditorDialog(QDialog):
         except Exception:
             showText(traceback.format_exc(), title="Load Actions Error")
         return []
+
+    def _prefer_svg_path(self, path: str) -> str:
+        """If path ends with .png and a sibling .svg exists, return the .svg path; otherwise return original."""
+        try:
+            if not path or not path.lower().endswith(".png"):
+                return path
+            # Respect relative paths under assets/icons
+            base = path[:-4]  # strip .png
+            candidate = base + ".svg"
+            # If path is relative, resolve against addon dir
+            if not os.path.isabs(candidate):
+                abs_candidate = os.path.join(ADDON_DIR, candidate)
+            else:
+                abs_candidate = candidate
+            if os.path.exists(abs_candidate):
+                # Return the same style (relative vs absolute) as input, but with .svg
+                return candidate if not os.path.isabs(path) else abs_candidate
+            return path
+        except Exception:
+            return path
 
     def _inject_model(self, data: list[Dict[str, Any]]) -> None:
         # Pass JSON string to JS hydrate(jsonStr)
@@ -129,8 +154,12 @@ class ToolbarEditorDialog(QDialog):
         if action == "save":
             try:
                 tools = json.loads(rest)
-                # Normalize separators
+                # Normalize separators and prefer SVG icons
                 for e in tools:
+                    # Prefer .svg over .png when available
+                    icon_path = e.get("icon") or ""
+                    if icon_path:
+                        e["icon"] = self._prefer_svg_path(icon_path)
                     name = (e.get("name") or "").strip()
                     if name in ("---", "—", "——", "———", "————", "—————"):
                         e["type"] = "separator"
@@ -208,8 +237,23 @@ if not _TOOLBAR_HOOK_REGISTERED:
 
 def open_toolbar_editor() -> None:
     from aqt import mw
-    dlg = ToolbarEditorDialog(mw)
-    dlg.exec_()
+    global _TOOLBAR_DIALOG
+    # If already open, focus it
+    if _TOOLBAR_DIALOG is not None and _TOOLBAR_DIALOG.isVisible():
+        _TOOLBAR_DIALOG.raise_()
+        _TOOLBAR_DIALOG.activateWindow()
+        return
+    _TOOLBAR_DIALOG = ToolbarEditorDialog(mw)
+    # When closed, drop the reference
+    try:
+        _TOOLBAR_DIALOG.destroyed.connect(lambda *_: _reset_toolbar_dialog_ref())
+    except Exception:
+        pass
+    _TOOLBAR_DIALOG.show()
+
+def _reset_toolbar_dialog_ref():
+    global _TOOLBAR_DIALOG
+    _TOOLBAR_DIALOG = None
 
 # Back-compat name used in actions.json
 edit_toolbar_json = open_toolbar_editor

@@ -1,0 +1,30 @@
+
+
+<table>
+  <thead>
+    <tr>
+      <th id="col-name">Name</th>
+      <th id="col-module">Module</th>
+      <th id="col-function">Function</th>
+      <th id="col-submenu">Submenu</th>
+      <th id="col-icon">Icon</th>
+      <th id="col-enabled">Enabled</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div class="controls">
+  <button onclick="onAddGlobal()">Add</button>
+  <button onclick="onAddDividerGlobal()">Add Divider</button>
+  <button onclick="onDeleteGlobal()">Delete Row</button>
+  <button class="primary" onclick="onSave()">Save</button>
+</div>
+
+<footer>
+  <span class="small">Right-click → Inspect (DevTools). Click a row to select; controls act on the selected row.</span>
+</footer>
+
+
+{{ toolbar_style }}
+{{ toolbar_script }}
