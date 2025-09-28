@@ -1,6 +1,5 @@
-
 :root {
-  --bg: #f7f8fa;
+  --bg: #f5f5f5;
   --panel: #ffffff;
   --text: #1f2937;
   --muted: #6b7280;
@@ -11,49 +10,86 @@
   --row-alt: #fafafa;
   --header-bg: #f3f4f6;
   --shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --tr-selected-bg: #dce5e8;
+  --canvas: #f5f5f5;
 }
 
 /* Layout */
 body {
   font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  margin: 16px;
+  margin-top: 20px;
   color: var(--text);
   background: var(--bg);
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0)); /* leave space for fixed .controls */
 }
 
 /* Control bar */
 .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 10px 0 14px;
+    /* ! Fixed control bar pinned to the bottom */
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom, 0);
+    /* ! Flex layout for buttons */
+    display: flex;
+    flex-wrap: wrap; /* allow wrapping on narrow widths */
+    gap: 10px;
+    align-items: center;
+    justify-content: space-evenly; /* distribute free space evenly; prevents jiggle on tiny width changes */
+
+    /* ! Visuals */
+    background: var(--canvas);
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.05);
+    z-index: 100;
+
+    /* ! Reserve a consistent bar height for body padding calculations */
+    --controls-h: 52px;
+    min-height: var(--controls-h);
 }
 
-.controls .small { font-size: 12px; color: var(--muted); }
+.controls button {
+  /* ! Buttons live inside the flex container; do NOT fix-position them */
+  position: static; /* was: fixed (bug) */
+  font-size: 14px;  /* normalize size so they don't overflow */
+  padding: 8px 12px !important; /* keep compact but clickable */
+  flex: 0 0 auto; /* don't stretch */
+  min-height: 34px;
+}
 
 /* Buttons (applies to any <button> in the view) */
 button {
   appearance: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   padding: 6px 10px;
   border-radius: 8px;
   font-size: 14px;
-  line-height: 1;
+  line-height: 1.2;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.02s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-button:hover { background: var(--row-hover); }
-button:active { transform: translateY(1px); }
+/* * Accessible focus ring without default outline flash */
+button:focus { outline: none; }
+button:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+button:is(:hover, :focus-visible) { background: var(--row-hover); }
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
 }
-button.primary:hover { filter: brightness(1.05); }
+button.primary:is(:hover, :focus-visible) { background: color-mix(in oklab, var(--accent) 92%, white); }
 
-
+tr.selected td { 
+  background-color: var(--tr-selected-bg);}
 
 table {
   width: 100%;
@@ -68,13 +104,15 @@ table {
 
 th, td {
   border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   vertical-align: middle;
 }
 
 th {
   text-align: left;
   position: sticky;
+  padding-left: 0.5vw;
   top: 0;
   background: var(--header-bg);
   z-index: 2;
@@ -102,20 +140,18 @@ tr[draggable="true"]:active { cursor: grabbing; }
 /* Last row shouldn't show bottom border through rounded corners */
 tbody tr:last-child td { border-bottom-color: transparent; }
 
-/* Per-cell controls */
-.row-actions { display: flex; gap: 8px; }
 
-/* Inputs inside cells */
-td input[type="text"],
-input[type="text"],
-input:not([type]) {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+
+td input[type="text"], input[type="text"], input:not([type]) {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid transparent;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    padding: 2px 3px;
+    font-size: 11px;
 }
 
 input[type="text"]:focus,
@@ -136,30 +172,43 @@ input[type="checkbox"] {
 /* Compact spacing on small screens */
 @media (max-width: 720px) {
   body { margin: 12px; }
-  th, td { padding: 8px 10px; }
   button { padding: 6px 10px; }
 }
 
 
-/* Row actions live inside the first cell (Name) */
-.row-actions {
-  display: flex;
-  gap: 8px;
-}
-
 /* Align the name input and its row actions */
 .name-cell {
-  display: flex;
+  display: table-cell;
   align-items: center;
-  gap: 8px;
 }
 
-/* Let the name input take available space */
-.name-cell > input[type="text"],
-.name-cell > input:not([type]) {
-  flex: 1 1 auto;
-  min-width: 140px;
+td:nth-child(1) input {
+  font-size: 13px;
+}
+td:nth-child(6) {
+  text-align:center;
+  padding:0;
+  margin:0;
 }
 
-/* Keep action buttons compact */
-.name-cell .row-actions button { padding: 4px 8px; }
+td:nth-child(2) input,
+td:nth-child(3) input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.icon-cell { display: table-cell; }
+.icon-preview { width:18px; height:18px; object-fit:contain; visibility:visible; }
+
+tr.selected td input {
+    background-color: white;
+}
+
+footer {
+  position: fixed; 
+  display: block;
+  text-align: center;
+  margin: 0 !important;
+  bottom: 0;
+  z-index: 999;
+  width: 100%;
+}

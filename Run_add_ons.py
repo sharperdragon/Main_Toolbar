@@ -1,10 +1,12 @@
-# This script dynamically builds and inserts custom toolbars and submenu entries into the Anki Tools menu.
-# It registers both internal utility scripts and external add-on config dialogs based on JSON config files.
-# This module dynamically loads and registers tools and configuration dialogs 
-# into a custom toolbar for Anki add-ons based on JSON configs and settings.
+"""
+    This script dynamically builds and inserts custom toolbars and submenu entries into the Anki Tools menu.
+It registers both internal utility scripts and external add-on config dialogs based on JSON config files.
+ This module dynamically loads and registers tools and configuration dialogs 
+ into a custom toolbar for Anki add-ons based on JSON configs and settings.
+    """
 # pyright: reportMissingImports=false
 # mypy: disable_error_code=import
-# Run_add_ons.py
+
 import os
 import traceback
 import importlib
@@ -15,7 +17,7 @@ from aqt.utils import showText
 from aqt.qt import QIcon
 
 from .utils import CONFIG, register_addon_tool, build_config_tools, resolve_icon_path
-# Ensure actions.json is read as UTF-8
+
 import json
 
 # Local definition to ensure UTF-8 reading for JSON files

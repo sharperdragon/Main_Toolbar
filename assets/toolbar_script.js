@@ -12,7 +12,9 @@ function rowHtml(r, i) {
       <td><input value="${esc(r.module)}" placeholder="Module (e.g., Main_Toolbar.modules...)" onchange="onEdit(${i}, 'module', this.value)"></td>
       <td><input value="${esc(r.function)}" placeholder="Function" onchange="onEdit(${i}, 'function', this.value)"></td>
       <td><input value="${esc(r.submenu)}" placeholder="Submenu" onchange="onEdit(${i}, 'submenu', this.value)"></td>
-      <td><input value="${esc(r.icon)}" placeholder="icons/..." onchange="onEdit(${i}, 'icon', this.value)"></td>
+      <td class="icon-cell">
+        <input value="${esc(r.icon)}" placeholder="icon.svg" onchange="(function(el){ const v = normalizeIcon(el.value); el.value = v; onEdit(${i}, 'icon', v); document.querySelector('tr[data-index=\"${i}\"] .icon-preview').src = v; })(this)">
+      </td>
       <td><input type="checkbox" ${r.enabled ? "checked": ""} onchange="onEdit(${i}, 'enabled', this.checked)"></td>
     </tr>
   `;

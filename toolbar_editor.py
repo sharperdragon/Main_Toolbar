@@ -11,7 +11,7 @@ import os, json, traceback
 from typing import Any, Dict
 
 from aqt.qt import (
-    QDialog, QVBoxLayout, Qt, QCursor, QMenu, QWebEngineView
+    QDialog, QVBoxLayout, Qt, QTimer, QCursor, QMenu, QWebEngineView
 )
 from aqt.webview import AnkiWebView
 from aqt.utils import showInfo, showText
@@ -187,6 +187,7 @@ class ToolbarEditorDialog(QDialog):
                 showText(traceback.format_exc(), title="Save Error")
 
 
+
 # --- DevTools context menu hook (right-click → Inspect) ---
 
 def _toolbar_context_menu_hook(webview: AnkiWebView, menu: QMenu) -> None:
@@ -198,25 +199,32 @@ def _toolbar_context_menu_hook(webview: AnkiWebView, menu: QMenu) -> None:
     act.triggered.connect(lambda: _inspect_toolbar_at_cursor(webview))
 
 
+
+
 def _inspect_toolbar_at_cursor(for_view: AnkiWebView) -> None:
-    """Open DevTools and inspect the element at the cursor position."""
     global _toolbar_devtools
     if _toolbar_devtools is None:
         _toolbar_devtools = QWebEngineView()
         _toolbar_devtools.setWindowTitle(DEVTOOLS_WINDOW_TITLE)
         _toolbar_devtools.resize(1100, 800)
+
     page = for_view.page()
     page.setDevToolsPage(_toolbar_devtools.page())
     _toolbar_devtools.show()
     _toolbar_devtools.raise_()
-    try:
-        gp = QCursor.pos()
-        lp = for_view.mapFromGlobal(gp)
-        page.inspectElementAt(lp.x(), lp.y())
-    except Exception:
-        # DevTools still opens even if precise inspect isn't available
-        pass
 
+    # Capture cursor position and map to the view
+    gp = QCursor.pos()
+    lp = for_view.mapFromGlobal(gp)
+
+    # Defer the inspection slightly to ensure DevTools is shown
+    def do_inspect():
+        try:
+            page.inspectElementAt(lp.x(), lp.y())
+        except Exception:
+            pass
+
+    QTimer.singleShot(0, do_inspect)
 
 # Register the hook once (hooks aren’t iterable; track via module flag)
 try:
