@@ -10,7 +10,13 @@
         "QID_Search",
         "Main_Toolbar",  
         "easy_find",
-        "Filtered_from_"
+        "Filtered_from_",
+        "Tag_Dict",
+        "Exam_deck_Gen",
+        "Add_table",
+        "global_css", 
+        "confetti"
+
     ],
     "addon_emojis": {
         "Change_notes": "📝",
@@ -18,11 +24,21 @@
         "QID_Search": "🔍",
         "Main_Toolbar": "🛠️",
         "easy_find": "🔍",
-        "Filtered_from_":"➕"
+        "Filtered_from_":"➕",
+        "Tag_Dict":"📖",
+        "Exam_deck_Gen": "🪄",
+        "Add_table": "📊",
+        "global_css": "🌎",
+        "confetti": "🎉"
     },
     "addon_nicknames": {
         "Filtered_from_": "Filtered from tag/deck",
         "Add_img_class": "Add IMG class",
-        "Change_notes": "CHANGE NOTES"
+        "Change_notes": "~CHANGE NOTES~",
+        "Tag_Dict":"Tag Dictionary", 
+        "Exam_deck_Gen": "Exam Deck Generator",
+        "Add_table": "Classify-tables",
+        "global_css": "Global Stylesheet",
+        "confetti": "confetti"
     }
 }
