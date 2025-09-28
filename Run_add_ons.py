@@ -10,14 +10,11 @@ It registers both internal utility scripts and external add-on config dialogs ba
 import os
 import traceback
 import importlib
-from PyQt6.QtWidgets import QMenu
-from PyQt6 import QtGui, QtSvg
 from aqt import mw
 from aqt.utils import showText
-from aqt.qt import QIcon
 
-from .utils import CONFIG, register_addon_tool, build_config_tools, resolve_icon_path
 
+from .utils import CONFIG, register_addon_tool, build_config_tools 
 import json
 
 # Local definition to ensure UTF-8 reading for JSON files
@@ -26,6 +23,29 @@ def load_json_file(path):
         return json.load(f)
 from .assets.config_ui import ConfigDialog
 from .assets.config_manager import ConfigManager
+
+
+# * Hard-coded "Toolbar Settings" action kept out of actions.json
+def _open_toolbar_settings():
+    """
+    * Opens the Toolbar Editor dialog without using actions.json
+    ^ Lazy import avoids circular imports and keeps startup fast.
+    """
+    from .toolbar_editor import edit_toolbar_json
+    edit_toolbar_json()
+
+def register_hardcoded_toolbar_settings():
+    """
+    & Register a persistent 'Toolbar Settings' menu item directly in the menu.
+    & This keeps it OUT of actions.json, so it will NOT appear in the editor table.
+    """
+    register_addon_tool(
+        name="Toolbar Settings",
+        callback=_open_toolbar_settings,
+        submenu_name=CONFIG.get("toolbar_title", "Custom Tools"),
+        icon="icons/bent_menu-burger.png",
+        enabled=True,
+    )
 
 
 # Loads and registers separate configuration dialogs for other add-ons into a submenu.
@@ -106,6 +126,8 @@ def load_tools_from_config():
     for entry in tools:
         entry_type = entry.get("type", "").strip()
         name = entry.get("name", "").strip()
+        if name == "\u2014\u2014\u2014":
+            name = "separator"
         raw_submenu = entry.get("submenu", "").strip()
         submenu_name = CONFIG.get("toolbar_title", "Custom Tools")
         if raw_submenu:
@@ -115,7 +137,6 @@ def load_tools_from_config():
 
         if entry_type in ("separator", "label") or not name:
             continue  # Only register functional tools via addon hook
-
         func_name = entry.get("function")
         module_path = entry.get("module")
         if not func_name or not module_path:
@@ -140,3 +161,4 @@ def load_tools_from_config():
             icon=icon,
             enabled=enabled
         )
+    register_hardcoded_toolbar_settings()

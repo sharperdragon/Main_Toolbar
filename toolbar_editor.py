@@ -29,6 +29,22 @@ CSS_PATH = os.path.join(ASSETS, "toolbar_style.css")
 JS_PATH  = os.path.join(ASSETS, "toolbar_script.js")
 DEVTOOLS_WINDOW_TITLE = "Toolbar DevTools"
 
+# * Sentinel & helper to keep 'Toolbar Settings' OUT of actions.json and the table
+TOOLBAR_SETTINGS_SENTINEL = {
+    "name": "Toolbar Settings",
+    "module": "Main_Toolbar.toolbar_editor",
+    "function": "edit_toolbar_json",
+}
+def _is_toolbar_settings(entry: Dict[str, Any]) -> bool:
+    """
+    & Identify the hard-coded Toolbar Settings row regardless of submenu/icon/enabled.
+    """
+    return (
+        (entry or {}).get("name") == TOOLBAR_SETTINGS_SENTINEL["name"]
+        and (entry or {}).get("module") == TOOLBAR_SETTINGS_SENTINEL["module"]
+        and (entry or {}).get("function") == TOOLBAR_SETTINGS_SENTINEL["function"]
+    )
+
 # Load config (labels, defaults)
 try:
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -104,7 +120,10 @@ class ToolbarEditorDialog(QDialog):
         try:
             if os.path.exists(ACTIONS_PATH):
                 with open(ACTIONS_PATH, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    # ! Keep the hard-coded item out of the editor grid
+                    data = [e for e in (data or []) if not _is_toolbar_settings(e)]
+                    return data
         except Exception:
             showText(traceback.format_exc(), title="Load Actions Error")
         return []
@@ -165,24 +184,17 @@ class ToolbarEditorDialog(QDialog):
                         e["type"] = "separator"
                     else:
                         e.pop("type", None)
-                # Guarantee Toolbar Settings row
-                if not any((e.get("name", "").strip().lower() == "toolbar settings") for e in tools):
-                    tools.append({
-                        "name": "Toolbar Settings",
-                        "module": "Main_Toolbar.toolbar_editor",
-                        "function": "edit_toolbar_json",
-                        "submenu": "",
-                        "icon": "icons/bent_menu-burger.svg",
-                        "enabled": True,
-                    })
+                # ? Ensure the hard-coded item never gets saved
+                clean_tools = [e for e in tools if not _is_toolbar_settings(e)]
                 # Backup + write
                 if os.path.exists(ACTIONS_PATH):
                     os.replace(ACTIONS_PATH, ACTIONS_PATH + ".bak")
                 with open(ACTIONS_PATH, "w", encoding="utf-8") as f:
-                    json.dump(tools, f, indent=2)
+                    json.dump(clean_tools, f, indent=2)
                 _refresh_menu()
                 showInfo("Saved. Reopen the Tools menu to see changes.")
-                self._inject_model(tools)
+                # ^ Re-hydrate with the filtered model so the row never reappears
+                self._inject_model(clean_tools)
             except Exception:
                 showText(traceback.format_exc(), title="Save Error")
 
