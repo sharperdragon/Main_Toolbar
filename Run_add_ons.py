@@ -10,6 +10,7 @@ It registers both internal utility scripts and external add-on config dialogs ba
 import os
 import traceback
 import importlib
+from collections import OrderedDict
 from aqt import mw
 from aqt.utils import showText
 
@@ -34,7 +35,7 @@ def _open_toolbar_settings():
     from .toolbar_editor import edit_toolbar_json
     edit_toolbar_json()
 
-def register_hardcoded_toolbar_settings():
+def register_hardcoded_toolbar_settings(order_index=None):
     """
     & Register a persistent 'Toolbar Settings' menu item directly in the menu.
     & This keeps it OUT of actions.json, so it will NOT appear in the editor table.
@@ -45,6 +46,7 @@ def register_hardcoded_toolbar_settings():
         submenu_name=CONFIG.get("toolbar_title", "Custom Tools"),
         icon="icons/bent_menu-burger.png",
         enabled=True,
+        order_index=order_index,  # ^ allow explicit placement
     )
 
 
@@ -107,12 +109,6 @@ def load_other_configs():
 # Main function to dynamically load functional tools defined in actions.json and add to the toolbar.
 # Dynamically loads and registers tools from actions.json file.
 def load_tools_from_config():
-    """
-    Load and register tools defined in the external actions.json configuration file.
-    This function differentiates between separators, labels, and functional tools,
-    dynamically imports tool callback functions, and registers them into the toolbar.
-    """
-
     # Define and check path to the actions.json configuration file.
     tools_path = os.path.join(os.path.dirname(__file__), "assets", "actions.json")
    
@@ -123,42 +119,54 @@ def load_tools_from_config():
     # Load and parse the JSON file containing tool definitions
     tools = load_json_file(tools_path)
 
+    # ! Build an ordered manifest: { submenu_name: [entries...] } in file order
+    manifest: OrderedDict[str, list[dict]] = OrderedDict()
+
     for entry in tools:
-        entry_type = entry.get("type", "").strip()
-        name = entry.get("name", "").strip()
-        if name == "\u2014\u2014\u2014":
-            name = "separator"
-        raw_submenu = entry.get("submenu", "").strip()
+        entry_type = (entry.get("type") or "").strip()
+        name = (entry.get("name") or "").strip()
+        if not name:
+            continue
+        # Skip separators/labels for menu registration (editor handles those)
+        if entry_type in ("separator", "label") or name == "separator" or name == "\u2014\u2014\u2014":
+            continue
+
+        raw_submenu = (entry.get("submenu") or "").strip()
         submenu_name = CONFIG.get("toolbar_title", "Custom Tools")
         if raw_submenu:
             submenu_name += f"::{raw_submenu}"
-        icon = entry.get("icon")
-        enabled = entry.get("enabled", True)
 
-        if entry_type in ("separator", "label") or not name:
-            continue  # Only register functional tools via addon hook
         func_name = entry.get("function")
         module_path = entry.get("module")
         if not func_name or not module_path:
             continue
 
-        try:
-            module = importlib.import_module(module_path)
-            callback = getattr(module, func_name)
-        except Exception:
-            err = traceback.format_exc()
-            showText(
-                f"[Custom Tools] Failed to import '{name}' from {module_path}.{func_name}:\n\n{err}",
-                title=CONFIG.get("toolbar_title", "Custom Tools") + " Error"
-            )
-            continue
+        if submenu_name not in manifest:
+            manifest[submenu_name] = []
+        manifest[submenu_name].append(entry)
 
-        # Register tool in the unified system
-        register_addon_tool(
-            name=name,
-            callback=callback,
-            submenu_name=submenu_name,
-            icon=icon,
-            enabled=enabled
-        )
+    # ^ Register entries by position within each submenu (no sorting)
+    for submenu_name, entries in manifest.items():
+        for idx, entry in enumerate(entries):
+            try:
+                module = importlib.import_module(entry["module"])
+                callback = getattr(module, entry["function"])
+            except Exception:
+                err = traceback.format_exc()
+                showText(
+                    f"[Custom Tools] Failed to import '{entry['name']}' from {entry['module']}.{entry['function']}:\n\n{err}",
+                    title=CONFIG.get("toolbar_title", "Custom Tools") + " Error"
+                )
+                continue
+
+            register_addon_tool(
+                name=entry["name"],
+                callback=callback,
+                submenu_name=submenu_name,
+                icon=entry.get("icon"),
+                enabled=entry.get("enabled", True),
+                order_index=idx,  # ! explicit position from file order
+            )
+
+    # Add hard-coded item last (or pass an index to place it)
     register_hardcoded_toolbar_settings()

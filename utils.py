@@ -7,8 +7,11 @@ import json
 from aqt import mw
 from aqt.qt import QAction, QMenu, QIcon
 from aqt.utils import showText
+from collections import OrderedDict
+from typing import Optional
+_submenu_cache: "OrderedDict[str, object]" = OrderedDict()  # submenu_name -> QMenu
 
- # ? Stores registered toolbar actions, grouped by submenu path (e.g., "Top::Sub::Leaf")
+# ? Stores registered toolbar actions, grouped by submenu path (e.g., "Top::Sub::Leaf")
 addon_actions = {}
 
 # Load and return JSON data from a file path
@@ -93,11 +96,13 @@ def _refresh_menu():
                 menu.addMenu(sub)
             add_nested_action(sub, tail, name, callback, icon, enabled)
 
-    # Build top-level menus by grouping tools
-    menu_groups = {}
+    # Build top-level menus by grouping tools (preserve first-seen order)
+    menu_groups = OrderedDict()
     for submenu_path, actions in addon_actions.items():
         top = submenu_path.split("::")[0] if submenu_path else CONFIG.get("toolbar_title", "Custom Tools")
-        menu_groups.setdefault(top, []).append((submenu_path, actions))
+        if top not in menu_groups:
+            menu_groups[top] = []
+        menu_groups[top].append((submenu_path, actions))
 
     for top_title, grouped in menu_groups.items():
         top_menu = QMenu(top_title, mw)
@@ -109,12 +114,18 @@ def _refresh_menu():
 
 
 # Register a tool into the custom toolbar and refresh the menu
-def register_addon_tool(name, callback, submenu_name="", icon=None, enabled=True):
+def register_addon_tool(name, callback, submenu_name: str = "", icon=None, enabled=True, order_index: Optional[int] = None):
     """
-    Register a new tool under a submenu. submenu_name can use '::' for nesting.
+    * Register a new tool under a submenu. 'submenu_name' can use '::' for nesting.
+    ^ If 'order_index' is provided, insert at that position within its submenu list; otherwise append.
     """
-    items = addon_actions.setdefault(submenu_name or "", [])
-    items.append((name, callback, icon, enabled))
+    key = submenu_name or ""
+    items = addon_actions.setdefault(key, [])
+    # Insert at a fixed position when requested (bounds-safe), else append
+    if isinstance(order_index, int) and 0 <= order_index <= len(items):
+        items.insert(order_index, (name, callback, icon, enabled))
+    else:
+        items.append((name, callback, icon, enabled))
     _refresh_menu()
 
 def build_config_tools(config, make_open_fn):

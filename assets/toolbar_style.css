@@ -212,3 +212,20 @@ footer {
   z-index: 999;
   width: 100%;
 }
+
+/* * Drag handle look & feel */
+.drag-handle {
+  display: inline-block;
+  margin-right: 8px;
+  cursor: grab;
+  user-select: none;
+}
+.tool-row.dragging {
+  opacity: 0.6;
+  outline: 1px dashed;
+}
+
+/* Optional: smooth placeholder spacing effect */
+.tool-row {
+  transition: transform 120ms ease, opacity 120ms ease;
+}
