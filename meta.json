@@ -1,1 +1,37 @@
-{"config": {"toolbar_title": "Custom", "enable_toolbar_settings": true, "default_icon": "icons/bent_menu-burger.png", "default_submenu": "", "show_disabled_items": false, "Other_addon_names": ["Change_notes", "High-Yield-Tags", "QID_Search", "_Main_Toolbar", "easy_find", "Filtered_from_"], "addon_emojis": {"Change_notes": "\ud83d\udcdd", "High-Yield-Tags": "\ud83c\udff7\ufe0f", "QID_Search": "\ud83d\udd0d", "_Main_Toolbar": "\ud83d\udee0\ufe0f", "easy_find": "\ud83d\udd0d", "Filtered_from_": "\u2795"}, "addon_nicknames": {"Filtered_from_": "Filtered from tag/deck", "Add_img_class": "Add IMG class", "Change_notes": "CHANGE NOTES"}}, "disabled": false, "mod": 0, "conflicts": [], "max_point_version": 0, "min_point_version": 0, "branch_index": 0, "update_enabled": true}
+{
+  "config": {
+    "toolbar_title": "Custom",
+    "enable_toolbar_settings": true,
+    "default_icon": "icons/bent_menu-burger.png",
+    "default_submenu": "",
+    "show_disabled_items": false,
+    "Other_addon_names": [
+        "_Change_notes",
+        "__High-Yield-Tags",
+        "__QID_Search",
+        "_Main_Toolbar",
+        "_easy_find",
+        "_Filtered_from_"
+    ],
+    "addon_emojis": {
+      "Change_notes": "\ud83d\udcdd",
+      "High-Yield-Tags": "\ud83c\udff7\ufe0f",
+      "QID_Search": "\ud83d\udd0d",
+      "_Main_Toolbar": "\ud83d\udee0\ufe0f",
+      "easy_find": "\ud83d\udd0d",
+      "Filtered_from_": "\u2795"
+    },
+    "addon_nicknames": {
+      "Filtered_from_": "Filtered from tag/deck",
+      "Add_img_class": "Add IMG class",
+      "Change_notes": "CHANGE NOTES"
+    }
+  },
+  "disabled": false,
+  "mod": 0,
+  "conflicts": [],
+  "max_point_version": 0,
+  "min_point_version": 0,
+  "branch_index": 0,
+  "update_enabled": true
+}
