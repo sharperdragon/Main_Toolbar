@@ -85,7 +85,7 @@ function rowHtml(r, i) {
       <td class="name-cell">
         <input value="${esc(r.name)}" placeholder="Name" onchange="onEdit(${i}, 'name', this.value)">
       </td>
-      <td><input value="${esc(r.module)}" placeholder="Module (e.g., Main_Toolbar.modules...)" onchange="onEdit(${i}, 'module', this.value)"></td>
+      <td><input value="${esc(r.module)}" placeholder="Module (e.g., _Main_Toolbar.modules...)" onchange="onEdit(${i}, 'module', this.value)"></td>
       <td><input value="${esc(r.function)}" placeholder="Function" onchange="onEdit(${i}, 'function', this.value)"></td>
       <td><input value="${esc(r.submenu)}" placeholder="Submenu" onchange="onEdit(${i}, 'submenu', this.value)"></td>
       <td class="icon-cell">
@@ -236,7 +236,7 @@ function onSave() {
   // Defensive: strip it out if present
   model = model.filter(x => !(
     (x.name || "").toLowerCase() === "toolbar settings" &&
-    x.module === "Main_Toolbar.toolbar_editor" &&
+    x.module === "_Main_Toolbar.toolbar_editor" &&
     x.function === "edit_toolbar_json"
   ));
 

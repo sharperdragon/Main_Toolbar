@@ -1,7 +1,7 @@
 [
   {
     "name": "Resolve IMG Dupes",
-    "module": "Main_Toolbar.modules.IMG_dupes",
+    "module": "_Main_Toolbar.modules.IMG_dupes",
     "function": "run_img_dupes_script",
     "submenu": "Media",
     "icon": "icons/bent_menu-burger.png",
@@ -9,7 +9,7 @@
   },
   {
     "name": "Delete stray note types",
-    "module": "Main_Toolbar.modules.Delete_unused_notes",
+    "module": "_Main_Toolbar.modules.Delete_unused_notes",
     "function": "delete_empty_note_types",
     "submenu": "Custom",
     "icon": "icons/image.png",
@@ -17,7 +17,7 @@
   },
   {
     "name": "Get Unused",
-    "module": "Main_Toolbar.modules.get_unused_media",
+    "module": "_Main_Toolbar.modules.get_unused_media",
     "function": "export_unused_media_to_txt",
     "submenu": "Media",
     "icon": "icons/gallery.png",
@@ -25,7 +25,7 @@
   },
   {
     "name": "Export Missing Media",
-    "module": "Main_Toolbar.modules.get_missing_media",
+    "module": "_Main_Toolbar.modules.get_missing_media",
     "function": "write_missing_file",
     "submenu": "Media",
     "icon": "icons/picture.png",
@@ -33,7 +33,7 @@
   },
   {
     "name": "QID Search",
-    "module": "Main_Toolbar.modules.FindQIDs",
+    "module": "_Main_Toolbar.modules.FindQIDs",
     "function": "main",
     "submenu": "",
     "icon": "icons/bent_menu-burger.png",
@@ -41,7 +41,7 @@
   },
   {
     "name": "Toolbar Settings",
-    "module": "Main_Toolbar.toolbar_editor",
+    "module": "_Main_Toolbar.toolbar_editor",
     "function": "edit_toolbar_json",
     "submenu": "",
     "icon": "icons/bent_menu-burger.png",

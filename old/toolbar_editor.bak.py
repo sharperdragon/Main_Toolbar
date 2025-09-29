@@ -262,7 +262,7 @@ class ToolbarManager(QDialog):
             if not toolbar_settings_exists:
                 tools.append({
                     "name": "Toolbar Settings",
-                    "module": "Main_Toolbar.toolbar_editor",
+                    "module": "_Main_Toolbar.toolbar_editor",
                     "function": "edit_toolbar_json",
                     "submenu": "",
                     "icon": CONFIG.get("default_icon", "icons/bent_menu-burger.svg"),

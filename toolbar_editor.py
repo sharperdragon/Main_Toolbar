@@ -32,7 +32,7 @@ DEVTOOLS_WINDOW_TITLE = "Toolbar DevTools"
 # * Sentinel & helper to keep 'Toolbar Settings' OUT of actions.json and the table
 TOOLBAR_SETTINGS_SENTINEL = {
     "name": "Toolbar Settings",
-    "module": "Main_Toolbar.toolbar_editor",
+    "module": "_Main_Toolbar.toolbar_editor",
     "function": "edit_toolbar_json",
 }
 def _is_toolbar_settings(entry: Dict[str, Any]) -> bool:
